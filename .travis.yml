@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mattaltepeter/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mattaltepeter/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t mattaltepeter/multi-client ./client
+  - docker build -t mattaltepeter/multi-nginx ./nginx
+  - docker build -t mattaltepeter/multi-server ./server
+  - docker build -t mattaltepeter/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push mattaltepeter/multi-client
+  - docker push mattaltepeter/multi-nginx
+  - docker push mattaltepeter/multi-server
+  - docker push mattaltepeter/multi-worker
